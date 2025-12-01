@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS OTP Sender</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-start:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-stop {
+            background: #ff4757;
+            color: white;
+        }
+
+        .btn-stop:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.loading {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+
+        .status.success {
+            background: #55efc4;
+            color: #00b894;
+        }
+
+        .status.error {
+            background: #fab1a0;
+            color: #d63031;
+        }
+
+        .results {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .result-item.success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .result-item.error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+
+        .result-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .result-status {
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .result-status.success {
+            background: #28a745;
+            color: white;
+        }
+
+        .result-status.error {
+            background: #dc3545;
+            color: white;
+        }
+
+        .summary {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .summary-item {
+            text-align: center;
+        }
+
+        .summary-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .summary-number.success {
+            color: #28a745;
+        }
+
+        .summary-number.error {
+            color: #dc3545;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+
+        .spinner.show {
+            display: block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #999;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 SMS OTP Sender</h1>
+        <p class="subtitle">Nhập số điện thoại và bắt đầu gửi</p>
+
+        <div class="input-group">
+            <label for="phone">Số điện thoại</label>
+            <input 
+                type="text" 
+                id="phone" 
+                placeholder="Ví dụ: 0987654321"
+                maxlength="10"
+            >
+        </div>
+
+        <div class="button-group">
+            <button class="btn-start" id="startBtn" onclick="start()">
+                🚀 Bắt đầu
+            </button>
+            <button class="btn-stop" id="stopBtn" onclick="stop()" disabled>
+                ⛔ Dừng lại
+            </button>
+        </div>
+
+        <div class="status" id="status"></div>
+        <div class="spinner" id="spinner"></div>
+
+        <div class="results" id="results">
+            <h3 style="margin-bottom: 15px; color: #333;">Kết quả:</h3>
+            <div id="resultList"></div>
+            <div class="summary" id="summary" style="display: none;">
+                <div class="summary-item">
+                    <div class="summary-number success" id="successCount">0</div>
+                    <div class="summary-label">Thành công</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-number error" id="failedCount">0</div>
+                    <div class="summary-label">Thất bại</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Made with ❤️ by WusTeam
+        </div>
+    </div>
+
+    <script>
+        let isRunning = false;
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status show ' + type;
+        }
+
+        function validatePhone(phone) {
+            const pattern = /^(09|08|07|03|05)\d{8}$/;
+            return pattern.test(phone);
+        }
+
+        async function start() {
+            const phoneInput = document.getElementById('phone');
+            const phone = phoneInput.value.trim();
+
+            if (!phone) {
+                showStatus('❌ Vui lòng nhập số điện thoại!', 'error');
+                return;
+            }
+
+            if (!validatePhone(phone)) {
+                showStatus('❌ Số điện thoại không hợp lệ! (Phải bắt đầu bằng 09/08/07/03/05 và đủ 10 số)', 'error');
+                return;
+            }
+
+            isRunning = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('spinner').classList.add('show');
+            showStatus('⏳ Đang gửi OTP đến số ' + phone + '...', 'loading');
+
+            document.getElementById('resultList').innerHTML = '';
+            document.getElementById('summary').style.display = 'none';
+
+            try {
+                const response = await fetch(`/api?sdt=${phone}`);
+                const data = await response.json();
+
+                if (!isRunning) {
+                    showStatus('⛔ Đã dừng!', 'error');
+                    return;
+                }
+
+                displayResults(data);
+                
+            } catch (error) {
+                showStatus('❌ Lỗi kết nối! Vui lòng thử lại', 'error');
+                console.error(error);
+            } finally {
+                document.getElementById('spinner').classList.remove('show');
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+                isRunning = false;
+            }
+        }
+
+        function stop() {
+            isRunning = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('spinner').classList.remove('show');
+            showStatus('⛔ Đã dừng!', 'error');
+        }
+
+        function displayResults(data) {
+            const results = document.getElementById('results');
+            const resultList = document.getElementById('resultList');
+            const summary = document.getElementById('summary');
+
+            results.classList.add('show');
+
+            if (data.r && data.r.data) {
+                let successCount = 0;
+                let failedCount = 0;
+
+                for (const [name, result] of Object.entries(data.r.data)) {
+                    const item = document.createElement('div');
+                    const isSuccess = result.status === 'success';
+                    
+                    if (isSuccess) successCount++;
+                    else failedCount++;
+
+                    item.className = `result-item ${isSuccess ? 'success' : 'error'}`;
+                    item.innerHTML = `
+                        <span class="result-name">${name}</span>
+                        <span class="result-status ${isSuccess ? 'success' : 'error'}">
+                            ${isSuccess ? '✓ Thành công' : '✗ Thất bại'}
+                        </span>
+                    `;
+                    resultList.appendChild(item);
+                }
+
+                document.getElementById('successCount').textContent = successCount;
+                document.getElementById('failedCount').textContent = failedCount;
+                summary.style.display = 'flex';
+
+                showStatus(
+                    `✅ Hoàn thành! Gửi thành công ${successCount}/${successCount + failedCount} API`, 
+                    'success'
+                );
+            }
+        }
+
+        document.getElementById('phone').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                start();
+            }
+        });
+
+        document.getElementById('phone').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    </script>
+</body>
+</html>
